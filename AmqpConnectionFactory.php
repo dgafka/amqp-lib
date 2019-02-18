@@ -8,7 +8,7 @@ use Enqueue\AmqpTools\ConnectionConfig;
 use Enqueue\AmqpTools\DelayStrategyAware;
 use Enqueue\AmqpTools\DelayStrategyAwareTrait;
 use Enqueue\AmqpTools\RabbitMqDlxDelayStrategy;
-use Interop\Amqp\AmqpConnectionFactory as InteropAmqpConnectionFactory;
+use Enqueue\AmqpLib\ConnectionFactory as InteropAmqpConnectionFactory;
 use Interop\Queue\Context;
 use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Connection\AMQPLazyConnection;
@@ -17,7 +17,7 @@ use PhpAmqpLib\Connection\AMQPSocketConnection;
 use PhpAmqpLib\Connection\AMQPSSLConnection;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 
-class AmqpConnectionFactory implements ConnectionFactory
+class AmqpConnectionFactory implements InteropAmqpConnectionFactory
 {
     use DelayStrategyAwareTrait;
 
@@ -57,13 +57,16 @@ class AmqpConnectionFactory implements ConnectionFactory
      */
     public function createContext(): Context
     {
-        return $this->createConnection()->createContext();
+        $context = new AmqpContext($this->createConnection(), $this->config->getConfig());
+        $context->setDelayStrategy($this->delayStrategy);
+
+        return $context;
     }
 
     /**
      * @inheritDoc
      */
-    public function createConnection(): AmqpConnection
+    private function createConnection(): AbstractConnection
     {
         if ($this->config->getOption('stream')) {
             if ($this->config->isSslOn()) {
@@ -174,7 +177,7 @@ class AmqpConnectionFactory implements ConnectionFactory
             }
         }
 
-        return new AmqpConnectionAdapter($con, $this->config->getConfig(), $this->delayStrategy);
+        return $con;
     }
 
     public function getConfig(): ConnectionConfig

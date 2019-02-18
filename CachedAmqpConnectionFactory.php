@@ -4,7 +4,6 @@ namespace Enqueue\AmqpLib;
 
 use Enqueue\AmqpTools\DelayStrategy;
 use Enqueue\AmqpTools\DelayStrategyAware;
-use Enqueue\AmqpTools\DelayStrategyAwareTrait;
 use Interop\Queue\Context;
 
 /**
@@ -19,9 +18,9 @@ class CachedAmqpConnectionFactory implements ConnectionFactory
      */
     private $connectionFactory;
     /**
-     * @var AmqpConnection|null
+     * @var AmqpContext|null
      */
-    private $cachedConnectionInstance;
+    private $cachedContextInstance;
 
     /**
      * CachedConnectionFactory constructor.
@@ -33,23 +32,15 @@ class CachedAmqpConnectionFactory implements ConnectionFactory
     }
 
     /**
-     * @inheritDoc
-     */
-    public function createConnection(): AmqpConnection
-    {
-        if (is_null($this->cachedConnectionInstance) || !$this->cachedConnectionInstance->isConnected()) {
-            $this->cachedConnectionInstance = $this->connectionFactory->createConnection();
-        }
-
-        return $this->cachedConnectionInstance;
-    }
-
-    /**
-     * @inheritdoc
+     * @return AmqpContext
      */
     public function createContext(): Context
     {
-        return $this->createConnection()->createContext();
+        if (is_null($this->cachedContextInstance) || !$this->cachedContextInstance->isConnected()) {
+            $this->cachedContextInstance = $this->connectionFactory->createContext();
+        }
+
+        return $this->cachedContextInstance;
     }
 
     /**

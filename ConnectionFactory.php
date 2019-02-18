@@ -3,10 +3,12 @@
 namespace Enqueue\AmqpLib;
 
 use Enqueue\AmqpTools\DelayStrategyAware;
-use Interop\Queue\ConnectionFactory AS PreviousConnectionFactory;
+use Interop\Amqp\AmqpConnectionFactory AS PreviousConnectionFactory;
 
 /**
- * Below method would be part of Interop\Queue\ConnectionFactory
+ *  !! This as final will be part of interlop package !!
+ *
+ * Interop\Amqp\AmqpConnectionFactory should extend DelayStrategyAware, so all interface acts the same.
  *
  * Interface BaseAmqpConnectionFactory
  * @package Enqueue\AmqpLib
@@ -14,8 +16,4 @@ use Interop\Queue\ConnectionFactory AS PreviousConnectionFactory;
  */
 interface ConnectionFactory extends PreviousConnectionFactory, DelayStrategyAware
 {
-    /**
-     * @return AmqpConnection
-     */
-    public function createConnection() : AmqpConnection;
 }
