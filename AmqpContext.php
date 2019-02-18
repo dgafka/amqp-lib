@@ -7,7 +7,7 @@ namespace Enqueue\AmqpLib;
 use Enqueue\AmqpTools\DelayStrategyAware;
 use Enqueue\AmqpTools\DelayStrategyAwareTrait;
 use Interop\Amqp\AmqpBind as InteropAmqpBind;
-use Interop\Amqp\AmqpContext as InteropAmqpContext;
+use Enqueue\AmqpLib\BaseAmqpContext as InteropAmqpContext;
 use Interop\Amqp\AmqpMessage as InteropAmqpMessage;
 use Interop\Amqp\AmqpQueue as InteropAmqpQueue;
 use Interop\Amqp\AmqpTopic as InteropAmqpTopic;
@@ -28,6 +28,7 @@ use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AbstractConnection;
 use PhpAmqpLib\Message\AMQPMessage as LibAMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
+use PHPUnit\Framework\TestCase;
 
 class AmqpContext implements InteropAmqpContext, DelayStrategyAware
 {
@@ -42,6 +43,10 @@ class AmqpContext implements InteropAmqpContext, DelayStrategyAware
      * @var AMQPChannel
      */
     private $channel;
+    /**
+     * @var bool
+     */
+    private $wasClosed;
 
     /**
      * @var string
@@ -57,6 +62,17 @@ class AmqpContext implements InteropAmqpContext, DelayStrategyAware
         ], $config);
 
         $this->connection = $connection;
+        $this->wasClosed = false;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function isConnected(): bool
+    {
+        $isLazyConnectionDisconnected = !is_null($this->getLibChannel()->getConnection());
+
+        return $isLazyConnectionDisconnected && $this->connection->isConnected() && !$this->wasClosed;
     }
 
     /**
@@ -272,6 +288,7 @@ class AmqpContext implements InteropAmqpContext, DelayStrategyAware
     {
         if ($this->channel) {
             $this->channel->close();
+            $this->wasClosed = true;
         }
     }
 
